@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>HOME MANAGEMENT SYSTEM (HMS)</title>
+    <link rel="stylesheet" href="index.css">
+
+    <style>
+        .time-btns {
+            display: flex;
+            justify-content: center;
+        }
+
+        .time-btns input {
+            border: 1px solid rgb(218, 218, 226);
+            margin: 10px;
+            max-width: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 900;
+            border-radius: 8px;
+            box-shadow: 1px 1px 10px rgba(9, 9, 229, 0.303);
+        }
+
+        .todo-item {
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .close-btn {
+            background-color: #ff6464;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 10px;
+            height: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: auto;
+            /* Pushes the button to the end */
+            order: 1;
+            /* Controls the order of the button */
+        }
+
+        #submit-btn {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="todo-app">
+            <h2>TO-DO LIST</h2>
+            <div class="row">
+                <input type="text" id="input-box" placeholder="Add your text">
+                <button onclick="showTimeInputs()">Add</button>
+            </div>
+            <div class="time-btns" id="timebtn" style="display: none;">
+                <input type="number" id="hours" placeholder="Hours">
+                <input type="number" id="minutes" placeholder="Minutes">
+                <input type="number" id="seconds" placeholder="Seconds">
+                <button id="submit-btn" onclick="addTask()">Submit</button>
+            </div>
+            <div id="todo-list">
+                <!-- Todo items will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <script>
+        // Function to show time inputs
+        function showTimeInputs() {
+            document.getElementById("timebtn").style.display = "flex";
+        }
+
+        // Function to add task
+        function addTask() {
+            // Get the input value
+            var taskText = document.getElementById("input-box").value.trim();
+            if (taskText === "") {
+                alert("Please enter a task.");
+                return;
+            }
+
+            // Get the time values
+            var hours = parseInt(document.getElementById("hours").value);
+            var minutes = parseInt(document.getElementById("minutes").value);
+            var seconds = parseInt(document.getElementById("seconds").value);
+
+            // Check if the entered values are valid numbers
+            if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                alert("Please enter valid numbers for time.");
+                return;
+            }
+
+            // Convert time to seconds
+            var totalTimeInSeconds = hours * 3600 + minutes * 60 + seconds;
+
+            // Create a new todo item
+            var todoItem = document.createElement("div");
+            todoItem.textContent = taskText + " (" + hours + "h " + minutes + "m " + seconds + "s)";
+            todoItem.classList.add("todo-item"); // Add a class for styling
+
+            // Append the todo item to the todo list
+            var todoList = document.getElementById("todo-list");
+            todoList.appendChild(todoItem);
+
+            // Save the todos to local storage
+            saveTasks();
+
+            // Clear the input fields
+            document.getElementById("input-box").value = "";
+            document.getElementById("hours").value = "";
+            document.getElementById("minutes").value = "";
+            document.getElementById("seconds").value = "";
+
+            // Hide the time input fields
+            document.getElementById("timebtn").style.display = "none";
+
+            // Start the countdown
+            var intervalId = setInterval(function () {
+                if (totalTimeInSeconds <= 0) {
+                    clearInterval(intervalId);
+                    playSound(); // Play sound continuously
+                    return;
+                }
+                var hours = Math.floor(totalTimeInSeconds / 3600);
+                var minutes = Math.floor((totalTimeInSeconds % 3600) / 60);
+                var seconds = totalTimeInSeconds % 60;
+                todoItem.textContent = taskText + " (" + hours + "h " + minutes + "m " + seconds + "s)";
+                totalTimeInSeconds--;
+
+                // Check if the close button is already appended
+                if (!todoItem.querySelector('.close-btn')) {
+                    // Create a close button for the todo item
+                    var closeButton = document.createElement("button");
+                    closeButton.textContent = "Delete";
+                    closeButton.classList.add("close-btn"); // Add a class for styling
+                    closeButton.onclick = function () {
+                        clearInterval(intervalId); // Stop the countdown
+                        stopSound(); // Stop the sound
+                        todoItem.remove(); // Remove the todo item when the close button is clicked
+                        // Save the updated todos to local storage
+                        saveTasks();
+                    };
+                    todoItem.appendChild(closeButton); // Append the close button to the todo item
+                }
+            }, 1000);
+        }
+
+        // Function to save todos to local storage
+        function saveTasks() {
+            var todoList = document.getElementById("todo-list").innerHTML;
+            localStorage.setItem("todos", todoList);
+        }
+
+        // Function to load todos from local storage
+        function loadTasks() {
+            var savedTodos = localStorage.getItem("todos");
+            if (savedTodos) {
+                document.getElementById("todo-list").innerHTML = savedTodos;
+            }
+        }
+
+        // Load todos when the page is loaded
+        window.onload = loadTasks;
+
+        // Function to play sound
+        function playSound() {
+            var audio = new Audio('mixkit-happy-bells-notification-937.wav');
+            audio.loop = true; // Set to loop continuously
+            audio.play();
+        }
+    </script>
+</body>
+
+</html>
